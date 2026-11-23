@@ -4,6 +4,7 @@ const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysocket
 const pino = require('pino');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 
 const app = express();
 app.use(cors());
@@ -52,9 +53,7 @@ app.get('/api/code', async (req, res) => {
     }
 });
 
-// ==========================================
 // RESET ROUTE TO DELETE STUCK SESSIONS
-// ==========================================
 app.get('/api/reset', (req, res) => {
     const number = req.query.number;
     if (!number) return res.send("Provide a number");
@@ -67,4 +66,14 @@ app.get('/api/reset', (req, res) => {
     return res.send(`❌ No session found for ${number}`);
 });
 
+// Start the server
 app.listen(3000, () => console.log('Panel API running on port 3000'));
+
+// KEEP-ALIVE PING FOR RENDER FREE TIER
+setInterval(() => {
+    https.get('https://senior-bot-0aka.onrender.com', (res) => {
+        console.log(`Keep-alive ping sent. Status: ${res.statusCode}`);
+    }).on('error', (err) => {
+        console.log("Keep-alive error:", err.message);
+    });
+}, 5 * 60 * 1000); // Pings every 5 minutes
