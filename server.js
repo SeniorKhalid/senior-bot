@@ -8,7 +8,7 @@ const path = require('path');
 const app = express();
 app.use(cors());
 
-// This line serves your index.html file to the browser
+// Serve the HTML files
 app.use(express.static(__dirname)); 
 
 app.get('/api/code', async (req, res) => {
@@ -50,6 +50,21 @@ app.get('/api/code', async (req, res) => {
     } catch (error) {
         return res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// ==========================================
+// RESET ROUTE TO DELETE STUCK SESSIONS
+// ==========================================
+app.get('/api/reset', (req, res) => {
+    const number = req.query.number;
+    if (!number) return res.send("Provide a number");
+    
+    const sessionDir = path.join(__dirname, 'sessions', number);
+    if (fs.existsSync(sessionDir)) {
+        fs.rmSync(sessionDir, { recursive: true, force: true });
+        return res.send(`✅ Session for ${number} deleted! You can now try pairing again.`);
+    }
+    return res.send(`❌ No session found for ${number}`);
 });
 
 app.listen(3000, () => console.log('Panel API running on port 3000'));
